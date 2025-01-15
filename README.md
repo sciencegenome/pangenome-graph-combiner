@@ -1,7 +1,7 @@
 # rust-pangenome-graph-combiner
  - rust pangenome linerarization and combination approach
  - writes the 0 segment approach as asm for the minigraph alignment.
- - Incase of RUST, please see the last commit message and if it says compiled binary then it is completed or else still in development version.
+ - please see the last commit message and if it says compiled binary then it is completed or else still in development version.
 
  ```
  cargo build
