@@ -86,12 +86,35 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
 
     // making a zero node graph by the comparative approach as there will be
     // only one node traversal, so there is no need to add a left child instead
-    // make a struct based approach.
+    // make a struct based approach. Iterate till the last node prior to the leaf node.
 
     let mut graphsort_write: Vec<GraphWrite> = Vec::new();
     for i in 0..graphadd.len() - 1 {
-            if graphadd[i].node.2 == 1 {
-                graphsort_write.push(GraphWrite {
+        if graphadd[i].node.2 == 1 {
+            graphsort_write.push(GraphWrite {
+                name: graphadd[i].name.clone(),
+                tag: graphadd[i].tag.clone(),
+                start: graphadd[i].start,
+                startstrand: graphadd[i].startstrand.clone(),
+                tagadd: graphadd[i].tagadd.clone(),
+                end: graphadd[i].end,
+                endstrand: graphadd[i].endstrand.clone(),
+                cigar: graphadd[i].cigar.clone(),
+                connection: graphadd[i].connectnode.clone(),
+                asmstart: format!("{}:{}:{}", "L1", "i", graphadd[i].end - graphadd[i].start),
+                asmend: format!("{}:{}:{}", "L2", "i", graphadd[i + 1].end - graphadd[i].end),
+            });
+        }
+    }
+
+    // separate the leaf node and add that information as a last push with the end being the
+    // length of the leaf node seq.
+
+    let mut last_node: Vec<GraphWrite> = Vec::new();
+    for i in 0..graphadd.len() - graphadd.len() - 1 {
+        for j in segment_hold.iter() {
+            if graphadd[i].tag == j.name {
+                last_node.push(GraphWrite {
                     name: graphadd[i].name.clone(),
                     tag: graphadd[i].tag.clone(),
                     start: graphadd[i].start,
@@ -101,11 +124,12 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
                     endstrand: graphadd[i].endstrand.clone(),
                     cigar: graphadd[i].cigar.clone(),
                     connection: graphadd[i].connectnode.clone(),
-                    asmstart: format!("{}:{}:{}","L1", "i", graphadd[i].end-graphadd[i].start),
-                    asmend: format!("{}:{}:{}","L2", "i",graphadd[i+1].end-graphadd[i].end),
+                    asmstart: format!("{}:{}:{}", "L1", "i", graphadd[i].end - graphadd[i].start),
+                    asmend: format!("{}:{}:{}", "L2", "i", j.seq.len()),
                 });
             }
         }
+    }
 
     Ok("graph asm have been written".to_string())
-  }
+}
