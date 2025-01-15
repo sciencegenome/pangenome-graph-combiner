@@ -7,7 +7,7 @@
  cargo build
  
  ```
- 
+
  ```
  ╭─gauravsablok@fedora ~/Desktop/work/rust-pangenome-graph-combiner  ‹main*› 
  ╰─➤  ./target/debug/rust-pangenome-graph-combiner -h
