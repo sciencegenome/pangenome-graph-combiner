@@ -90,7 +90,7 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
 
     let mut graphsort_write: Vec<GraphWrite> = Vec::new();
     for i in 0..graphadd.len() - 1 {
-        if graphadd[i].node.2 == 1 {
+        if graphadd[i].node.2 == 0 {
             graphsort_write.push(GraphWrite {
                 name: graphadd[i].name.clone(),
                 tag: graphadd[i].tag.clone(),
