@@ -129,23 +129,10 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
                 connection: leafnode.connectnode.clone(),
                 asmstart: format!("{}:{}:{}", "L1", "i", leafnode.end - leafnode.start),
                 asmend: format!("{}:{}:{}", "L2", "i", i.seq.len()),
-        if graphadd[i].node.2 == 0 {
-            graphsort_write.push(GraphWrite {
-                name: graphadd[i].name.clone(),
-                tag: graphadd[i].tag.clone(),
-                start: graphadd[i].start,
-                startstrand: graphadd[i].startstrand.clone(),
-                tagadd: graphadd[i].tagadd.clone(),
-                end: graphadd[i].end,
-                endstrand: graphadd[i].endstrand.clone(),
-                cigar: graphadd[i].cigar.clone(),
-                connection: graphadd[i].connectnode.clone(),
-                asmstart: format!("{}:{}:{}", "L1", "i", graphadd[i].end - graphadd[i].start),
-                asmend: format!("{}:{}:{}", "L2", "i", graphadd[i + 1].end - graphadd[i].end),
             });
         }
     }
-
+   
     let mut graphwrite = File::create("graph-write.txt").expect("file not present");
     for i in graphsort_write.clone().into_iter() {
         writeln!(
