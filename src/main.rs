@@ -89,7 +89,6 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
 
     let mut graphsort_write: Vec<GraphWrite> = Vec::new();
     for i in 0..graphadd.len() - 1 {
-<<<<<<< HEAD
         graphsort_write.push(GraphWrite {
             name: graphadd[i].name.clone(),
             tag: graphadd[i].tag.clone(),
@@ -130,7 +129,6 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
                 connection: leafnode.connectnode.clone(),
                 asmstart: format!("{}:{}:{}", "L1", "i", leafnode.end - leafnode.start),
                 asmend: format!("{}:{}:{}", "L2", "i", i.seq.len()),
-=======
         if graphadd[i].node.2 == 0 {
             graphsort_write.push(GraphWrite {
                 name: graphadd[i].name.clone(),
@@ -144,7 +142,6 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
                 connection: graphadd[i].connectnode.clone(),
                 asmstart: format!("{}:{}:{}", "L1", "i", graphadd[i].end - graphadd[i].start),
                 asmend: format!("{}:{}:{}", "L2", "i", graphadd[i + 1].end - graphadd[i].end),
->>>>>>> 8c2a138e84888534e5c08554dbfa52ddfad6e0ac
             });
         }
     }
