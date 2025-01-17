@@ -12,7 +12,7 @@ use std::io::{BufRead, BufReader, Write};
 /*
 *Author Gaurav Sablok
 *Universitat Potsdam
-*Date 2024-1-15
+*Date 2024-1-17
 
  rust-asm-prepare: converts the pangenome graph into the
  asm format for writing the asm format.
@@ -38,7 +38,7 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
                 .split(|c: char| !c.is_numeric())
                 .collect::<Vec<_>>()
                 .into_iter()
-                .filter(|x| x.is_empty())
+                .filter(|x| !x.is_empty())
                 .collect::<Vec<_>>()
                 .join("")
                 .parse::<usize>()
@@ -47,7 +47,7 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
                 .split(|c: char| !c.is_numeric())
                 .collect::<Vec<_>>()
                 .into_iter()
-                .filter(|x| x.is_empty())
+                .filter(|x| !x.is_empty())
                 .collect::<Vec<_>>()
                 .join("")
                 .parse::<usize>()
@@ -59,18 +59,21 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
                     .parse::<usize>()
                     .unwrap(),
             );
-            graphadd.push(Zerograph {
-                name: linevec[0].to_string(),
-                tag: linevec[1].to_string(),
-                start: startsplit,
-                startstrand: linevec[2].to_string(),
-                tagadd: linevec[3].to_string(),
-                end: endsplit,
-                endstrand: linevec[4].to_string(),
-                cigar: linevec[5].to_string(),
-                connectnode: linevec[6].to_string(),
-                node: connectionadd,
-            });
+            // checks the node connection here so that it only takes the 0 segment node.
+            if connectionadd.2 == 0 {
+                graphadd.push(Zerograph {
+                    name: linevec[0].to_string(),
+                    tag: linevec[1].to_string(),
+                    start: startsplit,
+                    startstrand: linevec[2].to_string(),
+                    tagadd: linevec[3].to_string(),
+                    end: endsplit,
+                    endstrand: linevec[4].to_string(),
+                    cigar: linevec[5].to_string(),
+                    connectnode: linevec[6].to_string(),
+                    node: connectionadd,
+                });
+            }
         } else if line.starts_with("S") {
             let newline = line
                 .split("\t")
@@ -84,12 +87,50 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
         }
     }
 
-    // making a zero node graph by the comparative approach as there will be
-    // only one node traversal, so there is no need to add a left child instead
-    // make a struct based approach. Iterate till the last node prior to the leaf node.
-
     let mut graphsort_write: Vec<GraphWrite> = Vec::new();
     for i in 0..graphadd.len() - 1 {
+<<<<<<< HEAD
+        graphsort_write.push(GraphWrite {
+            name: graphadd[i].name.clone(),
+            tag: graphadd[i].tag.clone(),
+            start: graphadd[i].start,
+            startstrand: graphadd[i].startstrand.clone(),
+            tagadd: graphadd[i].tagadd.clone(),
+            end: graphadd[i].end,
+            endstrand: graphadd[i].endstrand.clone(),
+            cigar: graphadd[i].cigar.clone(),
+            connection: graphadd[i].connectnode.clone(),
+            asmstart: format!("{}:{}:{}", "L1", "i", graphadd[i].end - graphadd[i].start),
+            asmend: format!(
+                "{}:{}:{}",
+                "L2",
+                "i",
+                graphadd[i + 1].end - graphadd[i + 1].start
+            ),
+        });
+    }
+
+    // adding the last leaf node by clone value so that you dont have to iterate till the end and
+    // if the leaf node is missing.
+
+    let new = graphadd.clone();
+    let leafnode = new[new.len() - 1].clone();
+    let mut leafnode_write: Vec<GraphWrite> = Vec::new();
+    for i in segment_hold.iter() {
+        if i.tag == leafnode.tagadd {
+            leafnode_write.push(GraphWrite {
+                name: leafnode.name.clone(),
+                tag: leafnode.tag.clone(),
+                start: leafnode.start,
+                startstrand: leafnode.startstrand.clone(),
+                tagadd: leafnode.tagadd.clone(),
+                end: leafnode.end,
+                endstrand: leafnode.endstrand.clone(),
+                cigar: leafnode.cigar.clone(),
+                connection: leafnode.connectnode.clone(),
+                asmstart: format!("{}:{}:{}", "L1", "i", leafnode.end - leafnode.start),
+                asmend: format!("{}:{}:{}", "L2", "i", i.seq.len()),
+=======
         if graphadd[i].node.2 == 0 {
             graphsort_write.push(GraphWrite {
                 name: graphadd[i].name.clone(),
@@ -103,32 +144,82 @@ fn graph_asm(path: &str) -> Result<String, Box<dyn Error>> {
                 connection: graphadd[i].connectnode.clone(),
                 asmstart: format!("{}:{}:{}", "L1", "i", graphadd[i].end - graphadd[i].start),
                 asmend: format!("{}:{}:{}", "L2", "i", graphadd[i + 1].end - graphadd[i].end),
+>>>>>>> 8c2a138e84888534e5c08554dbfa52ddfad6e0ac
             });
         }
     }
 
-    // separate the leaf node and add that information as a last push with the end being the
-    // length of the leaf node seq.
+    let mut graphwrite = File::create("graph-write.txt").expect("file not present");
+    for i in graphsort_write.clone().into_iter() {
+        writeln!(
+            graphwrite,
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            i.name,
+            i.tag,
+            i.start,
+            i.startstrand,
+            i.tagadd,
+            i.end,
+            i.endstrand,
+            i.cigar,
+            i.connection,
+            i.asmstart,
+            i.asmend
+        )
+        .expect("line not present");
+    }
 
-    let mut last_node: Vec<GraphWrite> = Vec::new();
-    for i in 0..graphadd.len() - graphadd.len() - 1 {
-        for j in segment_hold.iter() {
-            if graphadd[i].tag == j.name {
-                last_node.push(GraphWrite {
-                    name: graphadd[i].name.clone(),
-                    tag: graphadd[i].tag.clone(),
-                    start: graphadd[i].start,
-                    startstrand: graphadd[i].startstrand.clone(),
-                    tagadd: graphadd[i].tagadd.clone(),
-                    end: graphadd[i].end,
-                    endstrand: graphadd[i].endstrand.clone(),
-                    cigar: graphadd[i].cigar.clone(),
-                    connection: graphadd[i].connectnode.clone(),
-                    asmstart: format!("{}:{}:{}", "L1", "i", graphadd[i].end - graphadd[i].start),
-                    asmend: format!("{}:{}:{}", "L2", "i", j.seq.len()),
-                });
-            }
-        }
+    for j in leafnode_write.clone().into_iter() {
+        writeln!(
+            graphwrite,
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            j.name,
+            j.tag,
+            j.start,
+            j.startstrand,
+            j.tagadd,
+            j.end,
+            j.endstrand,
+            j.cigar,
+            j.connection,
+            j.asmstart,
+            j.asmend
+        )
+        .expect("line not present");
+    }
+
+    for i in graphsort_write.into_iter() {
+        println!(
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            i.name,
+            i.tag,
+            i.start,
+            i.startstrand,
+            i.tagadd,
+            i.end,
+            i.endstrand,
+            i.cigar,
+            i.connection,
+            i.asmstart,
+            i.asmend
+        );
+    }
+
+    for j in leafnode_write.into_iter() {
+        println!(
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            j.name,
+            j.tag,
+            j.start,
+            j.startstrand,
+            j.tagadd,
+            j.end,
+            j.endstrand,
+            j.cigar,
+            j.connection,
+            j.asmstart,
+            j.asmend
+        )
     }
 
     Ok("graph asm have been written".to_string())
